@@ -1,5 +1,17 @@
 from pypdf import PdfReader
 from typing import List, Dict
+import re
+
+
+def clean_text(text: str) -> str:
+    """Remove broken unicode surrogates and clean up text."""
+    # Remove lone surrogates (broken emojis like \ud83d)
+    text = text.encode('utf-16', 'surrogatepass').decode('utf-16', 'ignore')
+    # Remove non-printable characters except newlines and spaces
+    text = re.sub(r'[^\x20-\x7E\n\t]', ' ', text)
+    # Collapse multiple spaces
+    text = re.sub(r' +', ' ', text)
+    return text.strip()
 
 
 def load_pdf(pdf_path: str) -> List[Dict]:
@@ -12,7 +24,7 @@ def load_pdf(pdf_path: str) -> List[Dict]:
         if text and text.strip():
             pages.append({
                 "page_num": page_num + 1,
-                "text": text.strip()
+                "text": clean_text(text)
             })
 
     print(f"Loaded {len(pages)} pages from '{pdf_path}'")
