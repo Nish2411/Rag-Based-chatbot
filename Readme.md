@@ -1,3 +1,5 @@
+**Version:** `v1.0.0`
+
 # PDF-RAG-CHATBOT
 
 A **Retrieval-Augmented Generation (RAG)** chatbot that lets users chat with the PDF *"Introduction to Deep Learning"* using local embeddings and Google's Gemini model.
