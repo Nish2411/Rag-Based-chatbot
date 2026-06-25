@@ -1,9 +1,9 @@
 from sentence_transformers import SentenceTransformer
-import chromadb
 from typing import List, Dict
 
+from src.vector_store import get_connection, init_schema, clear_index, insert_chunks
+
 MODEL_NAME = "all-MiniLM-L6-v2"
-COLLECTION_NAME = "pdf_rag"
 
 
 def get_embedder():
@@ -13,25 +13,14 @@ def get_embedder():
     return model
 
 
-def get_chroma_client(persist_dir: str = "data/vector_store"):
-    """Create a persistent ChromaDB client."""
-    client = chromadb.PersistentClient(path=persist_dir)
-    return client
-
-
-def build_index(chunks: List[Dict], persist_dir: str = "data/vector_store"):
-    """Embed all chunks and store them in ChromaDB."""
+def build_index(chunks: List[Dict]):
+    """Embed all chunks and store them in PostgreSQL with pgvector."""
     model = get_embedder()
-    client = get_chroma_client(persist_dir)
+    conn = get_connection()
+    init_schema(conn)
+    clear_index(conn)
+    print("Cleared existing index.")
 
-    existing = [c.name for c in client.list_collections()]
-    if COLLECTION_NAME in existing:
-        client.delete_collection(COLLECTION_NAME)
-        print("Deleted existing collection.")
-
-    collection = client.create_collection(COLLECTION_NAME)
-
-    # Clean: remove any chunks with empty or non-string text
     chunks = [c for c in chunks if isinstance(c["text"], str) and c["text"].strip()]
     print(f"Clean chunks to embed: {len(chunks)}")
 
@@ -44,13 +33,15 @@ def build_index(chunks: List[Dict], persist_dir: str = "data/vector_store"):
 
     batch_size = 100
     for i in range(0, len(texts), batch_size):
-        collection.add(
-            ids=ids[i:i+batch_size],
-            documents=texts[i:i+batch_size],
-            embeddings=embeddings[i:i+batch_size],
-            metadatas=metadatas[i:i+batch_size]
+        insert_chunks(
+            conn,
+            ids[i : i + batch_size],
+            texts[i : i + batch_size],
+            metadatas[i : i + batch_size],
+            embeddings[i : i + batch_size],
         )
-        print(f"Indexed batch {i//batch_size + 1}")
+        print(f"Indexed batch {i // batch_size + 1}")
 
-    print(f"Successfully indexed {len(texts)} chunks into ChromaDB.")
-    return collection
+    print(f"Successfully indexed {len(texts)} chunks into PostgreSQL.")
+    conn.close()
+    return conn

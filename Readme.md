@@ -8,7 +8,7 @@ A **Retrieval-Augmented Generation (RAG)** chatbot that lets users chat with the
 
 - Extracts and chunks text from 'IntroToDeepLearning.pdf'
 - Uses 'all-MiniLM-L6-v2' for embeddings
--Store vectors in **ChromaDB** (persistent)
+- Store vectors in **PostgreSQL + pgvector** (Docker)
 - Retrieves relevant chunks for user queries
 - Powered by **Gemini 2.5 Flash** for high-quality answers
 - Clean **Streamlit** UI
@@ -19,7 +19,7 @@ Frontend: Streamlit
 
 Embeddings: sentence-transformers (all-MiniLM-L6-v2)
 
-Vector Store: ChromaDB
+Vector Store: PostgreSQL + pgvector
 
 LLM: Gemini 2.5 Flash
 
@@ -27,18 +27,28 @@ PDF Processing: PyPDF2 / pdfminer
 
 ## How to Run
 
-1. **Install dependencies**
+1. **Start PostgreSQL with pgvector (Docker)**
+    ```bash
+    docker compose up -d
+    ```
+
+2. **Configure environment**
+    ```bash
+    cp .env.example .env
+    # Add your GEMINI_API_KEY to .env
+    ```
+
+3. **Install dependencies**
     ```bash
     pip install -r requirements.txt
     ```
 
-
-2. **Ingest the PDF (Run once)**
+4. **Ingest the PDF (run once)**
     ```bash
     python ingest.py
     ```
 
-3. **Start the chatbot**
+5. **Start the chatbot**
     ```bash
     streamlit run app.py
     ```

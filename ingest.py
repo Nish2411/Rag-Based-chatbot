@@ -13,7 +13,7 @@ def main():
     pages = load_pdf(PDF_PATH)
     chunks = chunk_pages(pages)
 
-    print("\nStep 2: Building ChromaDB index...")
+    print("\nStep 2: Building PostgreSQL/pgvector index...")
     build_index(chunks)
 
     print("\nIngest complete! You can now run the chatbot with: streamlit run app.py")
